@@ -1,0 +1,40 @@
+# .github/workflows/jekyll.yml 파일
+
+name: Build and Deploy Jekyll site to GitHub Pages
+
+on:
+  push:
+    branches: ["main"] # main 브랜치에 push될 때 실행됩니다. (master라면 master로 변경)
+
+jobs:
+  jekyll-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1" # 최신 루비 버전 사용
+          bundler-cache: true # Gem 설치 속도 향상
+
+      - name: Build with Jekyll
+        run: bundle exec jekyll build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    needs: jekyll-build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
