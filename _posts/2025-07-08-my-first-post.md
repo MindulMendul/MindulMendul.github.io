@@ -3,9 +3,16 @@ layout: post
 title: 첫 게시글
 subtitle: 민둘맨둘한 첫 게시글 되시겠다.
 excerpt_image: https://avatars.githubusercontent.com/u/69645953?v=4
-categories: 잡담
-tags: [잡담]
+
+categories: etc
+tags: [etc]
 top: 1
+
+toc: true
+toc_sticky: true
+
+date: 2025-07-08
+last_modified_at: 2025-07-08
 ---
 
 ![banner](https://avatars.githubusercontent.com/u/69645953?v=4)
