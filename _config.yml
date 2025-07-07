@@ -106,9 +106,9 @@ google_analytics: G-Q782XR5JCV
 # Default theme colors as below:
 # coolblack: #090a0b
 # spacegrey: #353535
-snowwhite: #ffffff
+# snowwhite: #ffffff
 #
-theme_color: snowwhite
+# theme_color: snowwhite
 #
 # Custom color as below:
 # theme_color: "#882250"
