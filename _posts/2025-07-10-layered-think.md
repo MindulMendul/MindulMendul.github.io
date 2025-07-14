@@ -3,7 +3,7 @@ layout: post
 title: 레이어드 씽킹
 subtitle: Product를 만드는 계층적 아이디어 개발론
 
-categories: Software Engineering
+categories: Software-Engineering
 tags: [Software Engineering]
 
 toc: true
