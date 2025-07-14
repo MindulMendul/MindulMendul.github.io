@@ -4,7 +4,7 @@ title: Vibe Coding 개발 방법에 대해 (1)
 subtitle: 바이브코딩을 할 때는 이런 거 생각하면 좋을 것 같아요!
 
 categories: Vibe-Coding
-tags: [Front-End, Software-Engineering, Vibe-Coding, Prototype, Gemini]
+tags: [Front End, Software Engineering, Vibe Coding, Prototype, Gemini]
 
 toc: true
 toc_sticky: true
