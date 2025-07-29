@@ -199,6 +199,114 @@ Jotai로 상태를 옮기고 나니, 이 상태들을 조작하는 핸들러 함
 
 여기서 Context API를 활용했습니다. 특정 페이지나 기능 범위에서만 필요한 핸들러 함수들을 모아 Provider 컴포넌트를 만들었습니다. 이렇게 하니, 필요한 컴포넌트만 Provider로 감싸서 핸들러를 주입해줄 수 있었고, 불필요한 전역 노출을 막을 수 있었습니다.
 
+```ts
+/// src/components/chatContextProvider.tsx
+
+"use client";
+
+import { useAtom, useAtomValue } from "jotai";
+import {
+  inputValueAtom,
+  inputImageAtom,
+  currentChatIdAtom,
+  isAIRespondingAtom,
+  hasUserSentMessageAtom,
+  isSidebarOpenAtom,
+  messagesAtomFamily,
+} from "@/atoms/chatAtoms";
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+} from "react";
+import { useChatRooms } from "@/queries/useChatRoom";
+import { useChatMessage } from "@/queries/useChatMessage";
+import { userAtom } from "@/atoms/authAtoms";
+
+type ChatActionsContextType = {
+  handleNewChat: () => void;
+  handleChatSelect: (chatId: number) => void;
+  setIsSidebarOpen: (isOpen: boolean) => void;
+};
+const ChatActionsContext = createContext<ChatActionsContextType | undefined>(
+  undefined
+);
+
+export const useChatHandlers = () => {
+  const context = useContext(ChatActionsContext);
+  if (context === undefined)
+    throw new Error("useChatActions must be used within a ChatProvider");
+  return context;
+};
+
+export const ChatContextProvider = ({ children }: { children: ReactNode }) => {
+  const [inputValue, setInputValue] = useAtom(inputValueAtom);
+  const [inputImage, setInputImage] = useAtom(inputImageAtom);
+  const [currentChatId, setCurrentChatId] = useAtom(currentChatIdAtom);
+  const [hasUserSentMessage, setHasUserSentMessage] = useAtom(
+    hasUserSentMessageAtom
+  );
+  const [isAIResponding, setIsAIResponding] = useAtom(isAIRespondingAtom);
+  const [isSidebarOpen, setIsSidebarOpen] = useAtom(isSidebarOpenAtom);
+
+  const user = useAtomValue(userAtom);
+
+  const { sendMessage } = useChatMessage();
+  const { error: chatRoomError } = useChatRooms();
+  const messages = useAtomValue(messagesAtomFamily(currentChatId));
+
+  // AI 응답이 오면 스피너를 제거
+  useEffect(() => {
+    if (messages.length > 0 && hasUserSentMessage) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.user.userId !== "asdf") {
+        setIsAIResponding(false);
+      }
+    }
+  }, [messages, hasUserSentMessage]);
+
+  const resetAtomState = useCallback(
+    (flag: boolean) => {
+      setHasUserSentMessage(flag);
+      setIsAIResponding(flag);
+      setInputValue("");
+      setInputImage(undefined);
+    },
+    [setHasUserSentMessage, setIsAIResponding, setInputValue, setInputImage]
+  );
+
+  const handleChatSelect = useCallback(
+    (chatId: number) => {
+      setCurrentChatId(chatId);
+      resetAtomState(false);
+    },
+    [setCurrentChatId, resetAtomState]
+  );
+
+  const handleNewChat = useCallback(() => {
+    if (chatRoomError) return;
+    setCurrentChatId(null);
+    resetAtomState(false);
+  }, [chatRoomError, setCurrentChatId, resetAtomState]);
+
+  const actionsValue: ChatActionsContextType = {
+    handleChatSelect,
+    handleNewChat,
+    setIsSidebarOpen,
+  };
+
+  return (
+    <ChatActionsContext.Provider value={actionsValue}>
+      {children}
+    </ChatActionsContext.Provider>
+  );
+};
+```
+
+물론 모든 핸들러 함수를 다 가져온 것은 아니고... 예시를 보여드리려고 몇 개만 가져왔습니다. 이런 식으로 provider를 지정해서 핸들러 함수를 관리하게 된다면, 불필요하게 전역적으로 함수를 정의할 필요도 없고, 핸들러 함수의 스코프가 어디까지 영향을 미치는지도 확실히 알 수 있습니다. 심지어, 핸들러함수가 provider 안에서만 정의되니, 핸들러 함수를 생성, 변경, 삭제할 때도, 다른 곳이 아니라, provider만 들여다보면 되니까, 응집도가 상당히 높다는 것을 알 수 있습니다. 그래서 굳이 핸들러 함수만 번거롭게 Context API를 활용하여 구현해두었습니다. 번거로운만큼, 효과적인 구조를 만들 수 있었죠. ㅎㅎ
+
 ## 4. 리펙토링 전과 후의 코드 품질 비교
 
 page의 모양이 완전히 바뀝니다..!
