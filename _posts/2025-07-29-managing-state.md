@@ -40,15 +40,15 @@ AI를 활용해 프로젝트의 MVP를 빠르게 개발했습니다. 프로젝�
 
 Tanstack-Query를 위해서 따로 src/queries 폴더에 useChatMessage 와 useChatRoom 이라는 커스텀 훅을 하나 만들었습니다. 원래 hooks로 분리를 했었지만, Tanstack-Query를 이용하는 훅이니까 일단 이름을 달리 해뒀습니다. 그런데, 여전히 어떻게 해야할지 잘 몰라서, 커스텀 훅 냄새가 더 난다싶으면 그냥 하나의 폴더로 합치는 것도 고려하고 있습니다.
 
-```
+```ts
 /// src/queries/useChatMessage.ts
 
-import { getChatReceive, postChatSend } from '@/api/chatAPI';
-import { currentChatIdAtom, messagesAtomFamily } from '@/atoms/chatAtoms';
-import { queryKeys } from '@/lib/queryKeys';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAtom, useStore } from 'jotai';
-import { useEffect } from 'react';
+import { getChatReceive, postChatSend } from "@/api/chatAPI";
+import { currentChatIdAtom, messagesAtomFamily } from "@/atoms/chatAtoms";
+import { queryKeys } from "@/lib/queryKeys";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAtom, useStore } from "jotai";
+import { useEffect } from "react";
 
 export const useChatMessage = () => {
   const [chatId, setChatId] = useAtom(currentChatIdAtom);
@@ -56,10 +56,7 @@ export const useChatMessage = () => {
   const store = useStore();
   const newChatMessageFetcherKey = queryKeys.chatMessages.fetcher(chatId!); // 채팅방 별로 API 받아오는 키
 
-  const {
-    data: queryResult,
-    status,
-  } = useQuery({
+  const { data: queryResult, status } = useQuery({
     queryKey: newChatMessageFetcherKey, // 여기서는 API를 받아서 가공할 예정
     queryFn: () => getChatReceive(chatId!),
     refetchInterval: 3000,
@@ -69,10 +66,11 @@ export const useChatMessage = () => {
 
   // chat message accumulating
   useEffect(() => {
-    if (!chatId || status !== 'success' || !queryResult.ok) return;
+    if (!chatId || status !== "success" || !queryResult.ok) return;
     store.set(messagesAtomFamily(chatId), (oldMessages = []) => {
       const newMessage = queryResult.data;
-      if (oldMessages.some((msg) => msg.id === newMessage.id)) return oldMessages;
+      if (oldMessages.some((msg) => msg.id === newMessage.id))
+        return oldMessages;
       return [...oldMessages, newMessage];
     });
   }, [queryResult, status, queryClient, chatId]);
@@ -87,7 +85,10 @@ export const useChatMessage = () => {
     onSuccess: (responseFromServer, newMessage) => {
       if (!responseFromServer.ok) return;
       const newChatId = responseFromServer.data;
-      store.set(messagesAtomFamily(newChatId), (oldMessages) => [...oldMessages, newMessage]);
+      store.set(messagesAtomFamily(newChatId), (oldMessages) => [
+        ...oldMessages,
+        newMessage,
+      ]);
       if (!chatId && newChatId) {
         setChatId(newChatId);
         queryClient.invalidateQueries({ queryKey: queryKeys.chatRooms.all() });
@@ -108,8 +109,8 @@ export const useChatMessage = () => {
   }
 
   return {
-    isLoading: status === 'pending',
-    error: status === 'error',
+    isLoading: status === "pending",
+    error: status === "error",
     sendMessage: mutate,
     isSending: isSending,
   };
@@ -124,13 +125,16 @@ export const useChatMessage = () => {
 
 보내는 것에 대해서는 조금 더 복잡한데요. mutate를 활용하여, messages를 갱신해주는 식으로 구현합니다. 여기서 조금 어려웠던 건,
 
-```
-store.set(messagesAtomFamily(newChatId), (oldMessages) => [...oldMessages, newMessage]);
+```ts
+store.set(messagesAtomFamily(newChatId), (oldMessages) => [
+  ...oldMessages,
+  newMessage,
+]);
 ```
 
 이 부분이었는데요. 원래 코드는
 
-```
+```ts
 const [messages, setMessages] = useAtom(messagesAtomFamily(chatId));
 ...
 
@@ -163,7 +167,7 @@ setMessages(( (oldMessages) => [...oldMessages, newMessage]));
 
 Jotai는 전역상태 라이브러리인 만큼, src/atoms 폴더를 하나 만들어줬습니다. 지금은 /chat 페이지에서만 활용하지만, 나중에 /graph 라든가, /archive 라든가, 페이지를 다양하게 만들 상황이 생길 것 같았습니다. 그래서, 사진에는 authAtoms가 추가로 있는 것을 볼 수 있는데, 이것의 일환이라고 생각해주시면 될 듯싶습니다.
 
-```
+```ts
 /// src/atoms/chatAtoms.ts
 
 import { atom } from 'jotai';
@@ -199,24 +203,26 @@ Jotai로 상태를 옮기고 나니, 이 상태들을 조작하는 핸들러 함
 
 page의 모양이 완전히 바뀝니다..!
 
-```
+```ts
 /// 리펙토링 이전 app/chat/page.tsx
 
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import { AppSidebar } from '@/components/AppSidebar';
-import { SidebarInset } from '@/components/ui/sidebar';
-import ChatHeader from '@/components/ChatHeader';
-import ChatSubmit from '@/components/ChatSubmit';
-import ChatArea from '@/components/ChatArea';
-import { useChat } from '@/hooks/useChat';
-import { useChatRooms } from '@/hooks/useChatRoom';
-import ImagePanel from '@/components/ImagePanel';
+import { useCallback, useEffect, useState } from "react";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
+import ChatHeader from "@/components/ChatHeader";
+import ChatSubmit from "@/components/ChatSubmit";
+import ChatArea from "@/components/ChatArea";
+import { useChat } from "@/hooks/useChat";
+import { useChatRooms } from "@/hooks/useChatRoom";
+import ImagePanel from "@/components/ImagePanel";
 
 export default function Chat() {
-  const [inputValue, setInputValue] = useState<string>('');
-  const [inputImage, setInputImage] = useState<MessageImage | undefined>(undefined);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [inputImage, setInputImage] = useState<MessageImage | undefined>(
+    undefined
+  );
   const [currentChatId, setCurrentChatId] = useState<number | null>(null);
   const [isAIResponding, setIsAIResponding] = useState<boolean>(false);
   const [hasUserSentMessage, setHasUserSentMessage] = useState<boolean>(false);
@@ -226,14 +232,21 @@ export default function Chat() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   /** chat state 관리하는 hook */
-  const { messages, examples, isLoading: isChatLoading, sendMessage, addMessageToCache } = useChat(currentChatId);
+  const {
+    messages,
+    examples,
+    isLoading: isChatLoading,
+    sendMessage,
+    addMessageToCache,
+  } = useChat(currentChatId);
   const { rooms: chatRooms, error: chatRoomError } = useChatRooms();
 
   // AI 응답이 오면 스피너를 숨기는 효과
   useEffect(() => {
     if (messages.length > 0 && hasUserSentMessage) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage && lastMessage.user.userId !== 'asdf') setIsAIResponding(false);
+      if (lastMessage && lastMessage.user.userId !== "asdf")
+        setIsAIResponding(false);
     }
   }, [messages, hasUserSentMessage]);
 
@@ -248,7 +261,7 @@ export default function Chat() {
       const userMessage: Message = {
         id: Date.now().toString(),
         text: inputValue,
-        user: { userId: 'asdf', username: 'mindul' },
+        user: { userId: "asdf", username: "mindul" },
         images: inputImage && [inputImage],
         timestamp: new Date(),
       };
@@ -259,16 +272,17 @@ export default function Chat() {
           onSuccess: (responseFromServer) => {
             if (responseFromServer.ok) {
               addMessageToCache(userMessage, responseFromServer.data);
-              if (currentChatId == null) setCurrentChatId(responseFromServer.data);
+              if (currentChatId == null)
+                setCurrentChatId(responseFromServer.data);
             }
           },
           onError: () => {
             setIsAIResponding(false); // 에러 발생 시에도 스피너 숨김
           },
-        },
+        }
       );
     },
-    [inputValue],
+    [inputValue]
   );
 
   const handleExampleSelect = (exampleText: string) => {
@@ -283,7 +297,7 @@ export default function Chat() {
     setHasUserSentMessage(true);
     setIsAIResponding(true);
     sendMsg(inputValue, inputImage);
-    setInputValue('');
+    setInputValue("");
     setInputImage(undefined);
   };
 
@@ -351,7 +365,7 @@ export default function Chat() {
           />
           <div className="flex-1 min-h-0">
             <ChatArea
-              userID={'asdf'}
+              userID={"asdf"}
               messages={messages}
               isLoading={isChatLoading && messages.length === 0}
               isAIResponding={isAIResponding && hasUserSentMessage}
@@ -382,16 +396,16 @@ export default function Chat() {
 }
 ```
 
-```
+```ts
 /// 리펙토링 이후 app/chat/page.tsx
 
-import { ChatSidebar } from '@/components/chat/ChatSidebar';
-import { SidebarInset } from '@/components/ui/sidebar';
-import ChatHeader from '@/components/chat/ChatHeader';
-import ChatInputBox from '@/components/chat/ChatInputBox';
-import ChatArea from '@/components/chat/ChatArea';
-import { ChatContextProvider } from '@/components/chat/ChatContextProvider';
-import ChatSidePanel from '@/components/chat/ChatSidePanel';
+import { ChatSidebar } from "@/components/chat/ChatSidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
+import ChatHeader from "@/components/chat/ChatHeader";
+import ChatInputBox from "@/components/chat/ChatInputBox";
+import ChatArea from "@/components/chat/ChatArea";
+import { ChatContextProvider } from "@/components/chat/ChatContextProvider";
+import ChatSidePanel from "@/components/chat/ChatSidePanel";
 
 export default function Chat() {
   return (
@@ -420,7 +434,7 @@ export default function Chat() {
 
 이건 컴포넌트를 봐도 마찬가지인데요.
 
-```
+```ts
 /// 리펙토링 이전 src/components/chatArea.tsx
 
 import { messageColor } from '@/styles/chat';
@@ -447,7 +461,7 @@ export default function ChatArea({
 }
 ```
 
-```
+```ts
 /// 리펙토링 이후 src/components/chatArea.tsx
 
 'use client';
