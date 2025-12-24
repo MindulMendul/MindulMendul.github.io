@@ -6,9 +6,6 @@ subtitle: 바이브코딩을 할 때는 이런 거 생각하면 좋을 것 같�
 categories: Vibe-Coding
 tags: [Front End, Software Engineering, Vibe Coding, Prototype, Gemini]
 
-toc: true
-toc_sticky: true
-
 date: 2025-07-10
 ---
 

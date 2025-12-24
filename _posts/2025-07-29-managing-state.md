@@ -6,9 +6,6 @@ subtitle: 응집도는 높이고, 의존성은 낮추고!
 categories: Front-End
 tags: [Front End, Software Engineering, Tanstack-Query, Jotai, Context API]
 
-toc: true
-toc_sticky: true
-
 date: 2025-07-29
 ---
 

@@ -6,7 +6,6 @@ excerpt_image: https://avatars.githubusercontent.com/u/69645953?v=4
 
 categories: etc
 tags: [etc]
-top: 1
 
 toc: true
 toc_sticky: true

@@ -6,9 +6,6 @@ subtitle: Product를 만드는 계층적 아이디어 개발론
 categories: Software-Engineering
 tags: [Software Engineering]
 
-toc: true
-toc_sticky: true
-
 date: 2025-07-10
 ---
 
